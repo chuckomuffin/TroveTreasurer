@@ -40,14 +40,15 @@ public class TroveTreasurer extends JavaPlugin implements Listener, Economy {
     private File trovesConfigFile = null;
 
     @Override
-    public void onEnable() {
-        saveDefaultConfig();
-        reloadTrovesConfig();
-        loadTrovesFromConfig();
-        getServer().getPluginManager().registerEvents(new TroveListener(this), this);
-        getServer().getPluginManager().registerEvents(this, this);
-        // Other initialization code
-    }
+public void onEnable() {
+    saveDefaultConfig();
+    loadTrovesFromConfig();
+    getServer().getPluginManager().registerEvents(new TroveListener(this), this);
+    getServer().getPluginManager().registerEvents(this, this);
+    this.getCommand("bal").setExecutor(new TTCommands(this));
+    this.getCommand("balance").setExecutor(new TTCommands(this));
+    // Other initialization code
+}
 
     private void reloadTrovesConfig() {
         if (trovesConfigFile == null) {
