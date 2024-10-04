@@ -1,19 +1,13 @@
-package com.trovetreasurer.commands;
+package com.trovetreasurer;
 
-import com.trovetreasurer.TroveTreasurer;
-import net.milkbowl.vault.economy.Economy;
-import org.bukkit.Material;
+import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.block.Block;
-import org.bukkit.block.Container;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 
 public class TTCommands implements CommandExecutor {
-
     private final TroveTreasurer plugin;
 
     public TTCommands(TroveTreasurer plugin) {
@@ -22,48 +16,85 @@ public class TTCommands implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (command.getName().equalsIgnoreCase("bal") || command.getName().equalsIgnoreCase("balance")) {
+        if (label.equalsIgnoreCase("bal") || label.equalsIgnoreCase("balance")) {
             if (sender instanceof Player) {
                 Player player = (Player) sender;
-                Economy econ = TroveTreasurer.getEconomy();
-                if (econ == null) {
-                    player.sendMessage("Economy service is not available.");
+                double balance = plugin.getEconomy().getBalance(player);
+                player.sendMessage("Your balance is: " + balance + " " + plugin.getConfig().getString("currency.plural"));
+            } else {
+                sender.sendMessage("This command can only be used by players.");
+            }
+            return true;
+        }
+
+        if (label.equalsIgnoreCase("tt")) {
+            if (args.length == 0) {
+                sender.sendMessage("Usage: /tt <send|reload|account>");
+                return true;
+            }
+
+            if (args[0].equalsIgnoreCase("send")) {
+                if (args.length != 3) {
+                    sender.sendMessage("Usage: /tt send <player> <amount>");
                     return true;
                 }
-                double inventoryBalance = getInventoryBalance(player, TroveTreasurer.getCurrencyItem());
-                double troveBalance = getTroveBalance(player, TroveTreasurer.getCurrencyItem());
-                double totalBalance = inventoryBalance + troveBalance;
-                player.sendMessage("Inventory Balance: " + inventoryBalance);
-                player.sendMessage("Trove Balance: " + troveBalance);
-                player.sendMessage("Total Balance: " + totalBalance);
+
+                Player target = Bukkit.getPlayer(args[1]);
+                if (target == null) {
+                    sender.sendMessage("Player not found.");
+                    return true;
+                }
+
+                double amount;
+                try {
+                    amount = Double.parseDouble(args[2]);
+                } catch (NumberFormatException e) {
+                    sender.sendMessage("Invalid amount.");
+                    return true;
+                }
+
+                if (sender instanceof Player) {
+                    Player player = (Player) sender;
+                    double balance = plugin.getEconomy().getBalance(player);
+                    if (balance < amount) {
+                        player.sendMessage("Insufficient funds.");
+                        return true;
+                    }
+
+                    plugin.getEconomy().withdrawPlayer(player, amount);
+                    plugin.getEconomy().depositPlayer(target, amount);
+                    player.sendMessage("Sent " + amount + " " + plugin.getConfig().getString("currency.plural") + " to " + target.getName());
+                    target.sendMessage("Received " + amount + " " + plugin.getConfig().getString("currency.plural") + " from " + player.getName());
+                } else {
+                    sender.sendMessage("This command can only be used by players.");
+                }
+                return true;
+            }
+
+            if (args[0].equalsIgnoreCase("reload")) {
+                plugin.reloadConfig();
+                sender.sendMessage("Plugin reloaded.");
+                return true;
+            }
+
+            if (args[0].equalsIgnoreCase("account")) {
+                if (args.length != 2) {
+                    sender.sendMessage("Usage: /tt account <player>");
+                    return true;
+                }
+
+                if (!sender.hasPermission("trovetreasurer.account")) {
+                    sender.sendMessage("You do not have permission to use this command.");
+                    return true;
+                }
+
+                OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
+                double balance = plugin.getEconomy().getBalance(target);
+                sender.sendMessage(target.getName() + "'s balance is: " + balance + " " + plugin.getConfig().getString("currency.plural"));
                 return true;
             }
         }
+
         return false;
-    }
-
-    private int getInventoryBalance(Player player, Material currencyItem) {
-        int balance = 0;
-        for (ItemStack item : player.getInventory().getContents()) {
-            if (item != null && item.getType() == currencyItem) {
-                balance += item.getAmount();
-            }
-        }
-        return balance;
-    }
-
-    private int getTroveBalance(Player player, Material currencyItem) {
-        Block trove = plugin.getTrove(player.getUniqueId());
-        if (trove == null || !(trove.getState() instanceof Container)) {
-            return 0;
-        }
-        Container container = (Container) trove.getState();
-        int balance = 0;
-        for (ItemStack item : container.getInventory().getContents()) {
-            if (item != null && item.getType() == currencyItem) {
-                balance += item.getAmount();
-            }
-        }
-        return balance;
     }
 }

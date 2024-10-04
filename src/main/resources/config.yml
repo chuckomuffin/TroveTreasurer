@@ -1,6 +1,15 @@
-currency-item: GOLD_NUGGET
-currency-nbt:
-  key: "customKey"
-  value: "customValue"
-currency-name-singular: Coin
-currency-name-plural: Coins
+currency-items:
+  GOLD_NUGGET:
+    value: 1
+    nbt:
+      key: "customKey"
+      value: "customValue"
+  DIAMOND:
+    value: 10
+    nbt:
+      key: "customKey"
+      value: "customValue"
+currency:
+  name:
+    singular: "Coin"
+    plural: "Coins"

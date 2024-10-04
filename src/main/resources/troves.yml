@@ -1,1 +1,7 @@
 troves:
+  # Example structure
+  #playerUUID:
+  #  - item: GOLD_NUGGET
+  #    amount: 10
+  #  - item: DIAMOND
+  #    amount: 2

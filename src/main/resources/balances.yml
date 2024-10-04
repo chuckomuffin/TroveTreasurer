@@ -1,0 +1,5 @@
+accounts:
+  playerUUID:
+    balance: 0
+    troves:
+      - location: world,x,y,z
