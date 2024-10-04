@@ -1,0 +1,11 @@
+name: TroveTreasurer
+main: com.trovetreasurer.TroveTreasurer
+version: ${project.version}
+api-version: 1.21
+depend: [Vault]
+
+commands:
+  bal:
+    description: Check your current balance
+  balance:
+    description: Check your current balance
